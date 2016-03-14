@@ -12,11 +12,9 @@ module.exports = {
         if (objcThrow !== null) {
           let potentialObjCPanic = null;
 
-          Interceptor.attach(objcThrow, {
-            onEnter(args) {
-              const exception = new ObjC.Object(args[0]);
-              potentialObjCPanic = preparePanic('Unhandled Objective-C exception: ' + exception.toString(), {}, this.context);
-            }
+          Interceptor.attach(objcThrow, function (args) {
+            const exception = new ObjC.Object(args[0]);
+            potentialObjCPanic = preparePanic('Unhandled Objective-C exception: ' + exception.toString(), {}, this.context);
           });
 
           Interceptor.attach(Module.findExportByName('libsystem_c.dylib', 'abort'), {
