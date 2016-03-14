@@ -4,32 +4,44 @@ module.exports = {
   handler: {
     install(sink) {
       Process.setExceptionHandler(exception => {
-        handlePanic(exception.message, exception, exception.context);
+        sink.onPanic(preparePanic(exception.message, exception, exception.context));
       });
 
       if (Process.platform === 'darwin') {
         const objcThrow = Module.findExportByName('libobjc.A.dylib', 'objc_exception_throw');
         if (objcThrow !== null) {
+          let potentialObjCPanic = null;
+
           Interceptor.attach(objcThrow, {
             onEnter(args) {
               const exception = new ObjC.Object(args[0]);
-              handlePanic('Unhandled Objective-C exception: ' + exception.toString(), {}, this.context);
+              potentialObjCPanic = preparePanic('Unhandled Objective-C exception: ' + exception.toString(), {}, this.context);
+            }
+          });
+
+          Interceptor.attach(Module.findExportByName('libsystem_c.dylib', 'abort'), {
+            onEnter(args) {
+              const isCausedByUnhandledObjCException = Thread.backtrace(this.context).map(DebugSymbol.fromAddress).some(symbol => {
+                return symbol.moduleName === 'libobjc.A.dylib' && symbol.name === '_objc_terminate()';
+              });
+              if (isCausedByUnhandledObjCException)
+                sink.onPanic(potentialObjCPanic);
             }
           });
         }
       }
 
-      function handlePanic(message, details, cpuContext) {
+      function preparePanic(message, details, cpuContext) {
         const backtrace = Thread.backtrace(cpuContext).map(DebugSymbol.fromAddress);
 
-        sink.onPanic({
+        return {
           message: message,
           details: details,
           stack: {
             native: backtrace.map(frame => frame.toString()).join('\n'),
             js: new Error().stack
           }
-        });
+        };
       }
     }
   },
