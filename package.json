@@ -1,9 +1,18 @@
 {
   "name": "@viaforensics/frida-panic",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Easy crash-reporting for Frida-based applications",
   "main": "index.js",
-  "transform": [["babelify", { "presets": ["es2015"] }]],
+  "transform": [
+    [
+      "babelify",
+      {
+        "presets": [
+          "es2015"
+        ]
+      }
+    ]
+  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/viaforensics/frida-panic.git"
