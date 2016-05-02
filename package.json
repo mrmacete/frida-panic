@@ -1,5 +1,5 @@
 {
-  "name": "@viaforensics/frida-panic",
+  "name": "frida-panic",
   "version": "1.0.4",
   "description": "Easy crash-reporting for Frida-based applications",
   "main": "index.js",
@@ -17,10 +17,11 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/viaforensics/frida-panic.git"
+    "url": "git+https://github.com/nowsecure/frida-panic.git"
   },
+  "license": "MIT",
   "bugs": {
-    "url": "https://github.com/viaforensics/frida-panic/issues"
+    "url": "https://github.com/nowsecure/frida-panic/issues"
   },
-  "homepage": "https://github.com/viaforensics/frida-panic#readme"
+  "homepage": "https://github.com/nowsecure/frida-panic#readme"
 }

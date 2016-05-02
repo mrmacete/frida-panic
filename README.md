@@ -7,7 +7,7 @@ Easy crash-reporting for [Frida](http://frida.re)-based applications.
 In your agent.js:
 
 ```js
-const panic = require('@viaforensics/frida-panic');
+const panic = require('frida-panic');
 
 panic.handler.install({
   onPanic(error) {
@@ -20,7 +20,7 @@ panic.handler.install({
 In your application:
 
 ```js
-const panic = require('@viaforensics/frida-panic');
+const panic = require('frida-panic');
 
 ...
 script.events.listen('message', onMessage);
