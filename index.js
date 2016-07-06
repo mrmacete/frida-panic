@@ -1,5 +1,7 @@
 'use strict';
 
+const unsafeOperations = {};
+
 module.exports = {
   handler: {
     install(sink) {
@@ -14,7 +16,11 @@ module.exports = {
 
           Interceptor.attach(objcThrow, function (args) {
             const exception = new ObjC.Object(args[0]);
-            potentialObjCPanic = preparePanic('Unhandled Objective-C exception: ' + exception.toString(), {}, this.context);
+            const description = exception.toString();
+            potentialObjCPanic = {
+              description: description,
+              details: preparePanic('Unhandled Objective-C exception: ' + description, {}, this.context)
+            };
           });
 
           Interceptor.attach(Module.findExportByName('libsystem_c.dylib', 'abort'), {
@@ -22,8 +28,14 @@ module.exports = {
               const isCausedByUnhandledObjCException = Thread.backtrace(this.context).map(DebugSymbol.fromAddress).some(symbol => {
                 return symbol.moduleName === 'libobjc.A.dylib' && symbol.name === '_objc_terminate()';
               });
-              if (isCausedByUnhandledObjCException)
-                sink.onPanic(potentialObjCPanic);
+              if (isCausedByUnhandledObjCException) {
+                const details = unsafeOperations[Process.getCurrentThreadId()];
+                if (details !== undefined) {
+                  details.exception = new Error(potentialObjCPanic.description);
+                } else {
+                  sink.onPanic(potentialObjCPanic.details);
+                }
+              }
             }
           });
         }
@@ -41,6 +53,25 @@ module.exports = {
           }
         };
       }
+    }
+  },
+  performUnsafeOperation(operation) {
+    const threadId = Process.getCurrentThreadId();
+
+    const details = {
+      exception: null
+    };
+    unsafeOperations[threadId] = details;
+
+    try {
+      return operation();
+    } catch (e) {
+      if (details.exception !== null)
+        throw details.exception;
+      else
+        throw e;
+    } finally {
+      delete unsafeOperations[threadId];
     }
   },
   format(error) {
