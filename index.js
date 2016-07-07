@@ -19,7 +19,7 @@ module.exports = {
             const description = exception.toString();
             potentialObjCPanic = {
               description: description,
-              details: preparePanic('Unhandled Objective-C exception: ' + description, {}, this.context)
+              details: preparePanic(`Unhandled Objective-C exception: ${description}`, {}, this.context)
             };
           });
 
